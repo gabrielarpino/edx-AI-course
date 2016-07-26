@@ -46,22 +46,25 @@ class ValueIterationAgent(ValueEstimationAgent):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
 
-        print "mdp ", self.mdp
-        print "discount", self.discount
-        print "iterations", self.iterations
-        print "values", self.values
-        print "mdp.getStates()", mdp.getStates()
-        print "possible actions((0,0))", mdp.getPossibleActions((0,0))
-        print "mdp.getTransitionStatesAndProbs('0,0', mdp.getPossibleActions('0,0')[0])", mdp.getTransitionStatesAndProbs((0,0), mdp.getPossibleActions((0,0))[0])
+        #print "mdp ", self.mdp
+        #print "discount", self.discount
+        #print "iterations", self.iterations
+        #print "values", self.values
+        #print "mdp.getStates()", mdp.getStates()
+        #print "possible actions((0,0))", mdp.getPossibleActions((0,0))
+        #print "mdp.getTransitionStatesAndProbs('0,0', mdp.getPossibleActions('0,0')[0])", self.mdp.getTransitionStatesAndProbs((0,0), mdp.getPossibleActions((0,0))[0])
 
 
         for i in range(self.iterations):
-	        for state in self.mdp.getStates():
-	        	q_values = []
-	        	if state != 'TERMINAL_STATE':	
-		        	for possible_action in self.mdp.getPossibleActions(state):
-		        		q_values.append(self.getQValue(state, possible_action))
-		        	self.values[state] = max(q_values)
+          values = self.values.copy()
+          for state in self.mdp.getStates():
+            q_values = []
+            if state != 'TERMINAL_STATE': 
+              #print "possible actions!!!", self.mdp.getPossibleActions(state)
+              for possible_action in self.mdp.getPossibleActions(state):
+                q_values.append(self.getQValue(state, possible_action))
+              values[state] = max(q_values)
+          self.values = values
 
 
     def getValue(self, state):
@@ -81,12 +84,10 @@ class ValueIterationAgent(ValueEstimationAgent):
 
         Q_value = 0
         gamma = self.discount
-        long_list = mdp.getTransitionStatesAndProbs(state,action)
+        long_list = self.mdp.getTransitionStatesAndProbs(state,action)
 
-        for action_prob in long_list:
-        	probability = long_list[action_prob][1]
-        	next_state = long_list[action_prob][0]
-        	Q_value += [self.values(next_state)*gamma + self.getReward(state, action, next_state)]*probability
+        for next_state, probability in long_list:
+          Q_value += (self.getValue(next_state)*gamma + self.mdp.getReward(state, action, next_state))*probability
 
         return Q_value
 
@@ -102,6 +103,18 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
+
+        values = util.Counter()
+
+
+        for action in self.mdp.getPossibleActions(state):
+          values[action] = self.getQValue(state,action)
+
+        try:
+          return values.argMax()
+        except:
+          return None
+
         util.raiseNotDefined()
 
     def getPolicy(self, state):
